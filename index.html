@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUSKOMLEKAD - Pusat Komunikasi dan Elektronika TNI Angkatan Darat</title>
+    <script>try{if(localStorage.getItem('pk-theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Rajdhani for Military/Tech HUD, Share Tech Mono for Code/Coords, Inter for Body -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        army: {
+                            950: 'rgb(var(--a950) / <alpha-value>)', 900: 'rgb(var(--a900) / <alpha-value>)',
+                            800: 'rgb(var(--a800) / <alpha-value>)', 700: 'rgb(var(--a700) / <alpha-value>)',
+                            600: 'rgb(var(--a600) / <alpha-value>)', 500: 'rgb(var(--a500) / <alpha-value>)',
+                            400: 'rgb(var(--a400) / <alpha-value>)',
+                        },
+                        gold: {
+                            500: 'rgb(var(--g500) / <alpha-value>)', 400: 'rgb(var(--g400) / <alpha-value>)',
+                            300: 'rgb(var(--g300) / <alpha-value>)',
+                        },
+                        gray: {
+                            200: 'rgb(var(--t200) / <alpha-value>)', 300: 'rgb(var(--t300) / <alpha-value>)',
+                            400: 'rgb(var(--t400) / <alpha-value>)',
+                        },
+                        white: 'rgb(var(--w) / <alpha-value>)',
+                        tactical: {
+                            green: '#00ff66',
+                            red: '#ff3333',
+                            amber: '#ffaa00',
+                            cyan: '#00f0ff'
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['Rajdhani', 'sans-serif'],
+                        mono: ['Share Tech Mono', 'monospace'],
+                        body: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        html, body {
+            height: auto;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0d0a;
+            color: #e5e7eb;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-heading {
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        .font-mono {
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .tactical-grid {
+            background-image: 
+                linear-gradient(to right, rgba(212, 175, 55, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(212, 175, 55, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .scanline-container {
+            position: relative;
+        }
+        .scanline-container::after {
+            content: '';
+            position: fixed;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.15) 50%, rgba(0, 255, 102, 0.2) 51%, transparent 55%);
+            animation: scanline 8s infinite linear;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes scanline {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+
+        .hud-bracket {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .hud-bracket::before, .hud-bracket::after,
+        .hud-bracket-inner::before, .hud-bracket-inner::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: rgba(212, 175, 55, 0.4);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+        .hud-bracket::before { top: -2px; left: -2px; border-top: 2px solid; border-left: 2px solid; }
+        .hud-bracket::after { top: -2px; right: -2px; border-top: 2px solid; border-right: 2px solid; }
+        .hud-bracket-inner::before { bottom: -2px; left: -2px; border-bottom: 2px solid; border-left: 2px solid; }
+        .hud-bracket-inner::after { bottom: -2px; right: -2px; border-bottom: 2px solid; border-right: 2px solid; }
+
+        .hud-bracket:hover::before, .hud-bracket:hover::after,
+        .hud-bracket:hover .hud-bracket-inner::before, .hud-bracket:hover .hud-bracket-inner::after {
+            border-color: #d4af37;
+            width: 18px;
+            height: 18px;
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+        }
+
+        #mouse-reticle {
+            pointer-events: none;
+            position: fixed;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease, transform 0.08s ease-out;
+        }
+
+        @keyframes radar-sweep {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .radar-sweeper {
+            animation: radar-sweep 4s linear infinite;
+        }
+
+        @keyframes target-ping {
+            0%, 100% { opacity: 0.1; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.3); filter: drop-shadow(0 0 6px #00ff66); }
+        }
+        .radar-ping {
+            animation: target-ping 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; box-shadow: 0 0 5px rgba(212, 175, 55, 0.5); }
+            50% { opacity: 0.5; box-shadow: 0 0 20px rgba(212, 175, 55, 0.9); }
+        }
+        .pulse-gold { animation: pulse-glow 2.5s infinite ease-in-out; }
+
+        .sonar-ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid #d4af37;
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+        @keyframes ripple {
+            0% { width: 0px; height: 0px; opacity: 1; }
+            100% { width: 180px; height: 180px; opacity: 0; }
+        }
+
+        .clip-tactical {
+            clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+        }
+
+        @keyframes text-glitch {
+            0% { text-shadow: 2px 0 #ff3333, -2px 0 #00f0ff; }
+            25% { text-shadow: -2px 0 #ff3333, 2px 0 #00f0ff; }
+            50% { text-shadow: 1px 0 #ff3333, -1px 0 #00f0ff; }
+            75% { text-shadow: -1px 0 #ff3333, 1px 0 #00f0ff; }
+            100% { text-shadow: 2px 0 #ff3333, -2px 0 #00f0ff; }
+        }
+        .glitch-text:hover {
+            animation: text-glitch 0.2s infinite;
+        }
+
+        .alutsista-card {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .alutsista-card.hidden-card {
+            display: none;
+        }
+
+        .equip-icon-panel {
+            height: 13rem;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(circle at 50% 30%, rgba(212,175,55,0.12), transparent 60%), #10150f;
+        }
+    </style>
+</head>
+<body class="bg-army-950 text-gray-200 antialiased selection:bg-gold-500 selection:text-black tactical-grid scanline-container">
+
+    <!-- MOUSE CROSSHAIR FOLLOWER HUD -->
+    <div id="mouse-reticle" class="hidden md:flex flex-col items-center justify-center pointer-events-none opacity-0">
+        <div class="w-8 h-8 border border-gold-500/60 rounded-full flex items-center justify-center relative">
+            <div class="w-1 h-1 bg-tactical-green rounded-full"></div>
+            <div class="absolute -top-2 w-0.5 h-2 bg-gold-500/80"></div>
+            <div class="absolute -bottom-2 w-0.5 h-2 bg-gold-500/80"></div>
+            <div class="absolute -left-2 h-0.5 w-2 bg-gold-500/80"></div>
+            <div class="absolute -right-2 h-0.5 w-2 bg-gold-500/80"></div>
+        </div>
+        <span id="coords-display" class="font-mono text-[9px] text-gold-400 bg-black/80 px-1 py-0.5 mt-1 border border-army-700">X:0 Y:0</span>
+    </div>
+
+    <!-- NAVIGATION BAR -->
+    <nav id="navbar" class="fixed top-0 left-0 w-full z-50 bg-army-950/90 backdrop-blur-md border-b border-army-700/80 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Logo & Brand Title -->
+                <a href="#hero" class="flex items-center space-x-3 group">
+                    <div class="w-11 h-11 bg-army-800 border border-gold-500 flex items-center justify-center rounded-sm clip-tactical group-hover:bg-gold-500 transition-colors">
+                        <i class="fa-solid fa-tower-broadcast text-gold-500 group-hover:text-army-950 text-xl transition-colors"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-heading text-2xl font-bold tracking-wider text-white leading-none group-hover:text-gold-400 transition-colors">PUSKOMLEKAD</span>
+                            <span class="inline-block w-2 h-2 rounded-full bg-tactical-green pulse-gold"></span>
+                        </div>
+                        <span class="font-mono text-[10px] text-gold-500 tracking-widest uppercase block">PUSAT KOMUNIKASI &amp; ELEKTRONIKA TNI AD</span>
+                    </div>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <div class="hidden lg:flex items-center space-x-6 text-sm font-semibold tracking-wider font-heading">
+                    <a href="#about" class="hover:text-gold-400 transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-gold-500 hover:after:w-full after:transition-all">TENTANG KAMI</a>
+                    <a href="#alutsista" class="hover:text-gold-400 transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-gold-500 hover:after:w-full after:transition-all">PERALATAN KOMLEK</a>
+                    <a href="#personel" class="hover:text-gold-400 transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-gold-500 hover:after:w-full after:transition-all">KEKUATAN PERSONEL</a>
+                    <a href="#prestasi" class="hover:text-gold-400 transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-gold-500 hover:after:w-full after:transition-all">PRESTASI</a>
+                    <a href="#kontak" class="hover:text-gold-400 transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-gold-500 hover:after:w-full after:transition-all">KONTAK</a>
+                </div>
+
+                <!-- Right Actions & Mobile Toggle -->
+                <div class="flex items-center space-x-4">
+                    <a href="#kontak" class="hidden sm:inline-flex items-center space-x-2 bg-gradient-to-r from-gold-500 to-amber-500 text-army-950 font-heading font-bold px-5 py-2.5 text-sm uppercase tracking-wider shadow-lg shadow-gold-500/20 clip-tactical hover:brightness-110 transition-all">
+                        <i class="fa-solid fa-headset text-sm"></i>
+                        <span>Pusat Komando</span>
+                    </a>
+
+                    <!-- Mobile Menu Button -->
+                    <button id="mobile-menu-btn" type="button" class="lg:hidden p-2 text-gray-300 hover:text-gold-400 focus:outline-none">
+                        <i id="mobile-menu-icon" class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer Menu -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-army-900 border-b border-army-700 px-4 pt-2 pb-6 space-y-3 font-heading text-lg">
+            <a href="#about" class="mobile-link block py-2 text-gray-200 hover:text-gold-400 border-b border-army-800">TENTANG KAMI</a>
+            <a href="#alutsista" class="mobile-link block py-2 text-gray-200 hover:text-gold-400 border-b border-army-800">PERALATAN KOMLEK</a>
+            <a href="#personel" class="mobile-link block py-2 text-gray-200 hover:text-gold-400 border-b border-army-800">KEKUATAN PERSONEL</a>
+            <a href="#prestasi" class="mobile-link block py-2 text-gray-200 hover:text-gold-400 border-b border-army-800">PRESTASI PRAJURIT</a>
+            <a href="#kontak" class="mobile-link block py-2 text-gold-400 font-bold"><i class="fa-solid fa-phone mr-2"></i>KONTAK KOMANDO</a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION WITH RADAR SWEEPER -->
+    <section id="hero" class="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden">
+        
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1572224104782-91a08d296390?fm=jpg&q=60&w=1600&auto=format&fit=crop" alt="Antena Komunikasi Satelit" class="w-full h-full object-cover opacity-20 filter contrast-125">
+            <div class="absolute inset-0 bg-gradient-to-t from-army-950 via-army-950/80 to-transparent"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="grid lg:grid-cols-12 gap-12 items-center">
+                
+                <!-- Left Title Content -->
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    
+                    <!-- Live Status Badge -->
+                    <div class="inline-flex items-center space-x-3 bg-army-900/90 border border-gold-500/50 px-4 py-2 rounded-sm font-mono text-xs text-gold-400 hud-bracket hud-bracket-inner">
+                        <span class="w-2.5 h-2.5 rounded-full bg-tactical-green pulse-gold"></span>
+                        <span class="tracking-widest">JARINGAN AMAN // STATUS: SIAP SIAGA KOMANDO</span>
+                    </div>
+
+                    <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold font-heading text-white tracking-wider leading-none">
+                        URAT NADI KOMUNIKASI<br>
+                        <span id="typed-headline" class="text-transparent bg-clip-text bg-gradient-to-r from-gold-400 via-gold-500 to-amber-200 border-r-4 border-gold-500"></span>
+                    </h1>
+
+                    <p class="text-base sm:text-lg text-gray-300 max-w-2xl font-light leading-relaxed font-body">
+                        Pusat Komunikasi dan Elektronika TNI Angkatan Darat (Puskomlekad) menyelenggarakan pembinaan dan dukungan operasional komunikasi elektronika guna menjamin kelancaran, kerahasiaan, dan keamanan arus informasi komando dan pengendalian di seluruh jajaran TNI AD.
+                    </p>
+
+                    <!-- Interactive CTA Buttons -->
+                    <div class="flex flex-wrap gap-4 justify-center lg:justify-start pt-2">
+                        <a href="#alutsista" class="sonar-btn bg-gold-500 hover:bg-gold-400 text-army-950 font-heading font-bold px-8 py-3.5 transition-all flex items-center space-x-2 clip-tactical shadow-lg shadow-gold-500/20 text-lg uppercase tracking-wider">
+                            <span>JELAJAHI PERALATAN KOMLEK</span>
+                            <i class="fa-solid fa-satellite-dish text-base"></i>
+                        </a>
+                        <a href="#about" class="sonar-btn bg-army-800 hover:bg-army-700 border border-army-600 text-white font-heading font-semibold px-8 py-3.5 transition-all flex items-center space-x-2 text-lg uppercase tracking-wider">
+                            <i class="fa-solid fa-shield-halved text-gold-400"></i>
+                            <span>PROFIL INSTITUSI</span>
+                        </a>
+                    </div>
+
+                    <!-- Quick Telemetry HUD Badges -->
+                    <div class="grid grid-cols-3 gap-4 pt-8 border-t border-army-700/60 max-w-xl mx-auto lg:mx-0 font-mono">
+                        <div class="p-3 bg-army-900/60 border border-army-800 rounded-sm">
+                            <p class="text-2xl sm:text-3xl font-heading font-bold text-white">99.9%</p>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-widest">UPTIME JARINGAN</p>
+                        </div>
+                        <div class="p-3 bg-army-900/60 border border-army-800 rounded-sm">
+                            <p class="text-2xl sm:text-3xl font-heading font-bold text-gold-400">34</p>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-widest">PROVINSI TERHUBUNG</p>
+                        </div>
+                        <div class="p-3 bg-army-900/60 border border-army-800 rounded-sm">
+                            <p class="text-2xl sm:text-3xl font-heading font-bold text-white">24/7</p>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-widest">PENGAMANAN SIBER</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Radar Scanner HUD Component -->
+                <div class="lg:col-span-5 flex justify-center">
+                    <div class="relative w-80 h-80 sm:w-96 sm:h-96 rounded-full border-2 border-gold-500/40 bg-army-950/80 p-4 shadow-2xl flex items-center justify-center hud-bracket hud-bracket-inner">
+                        
+                        <div class="absolute inset-4 rounded-full border border-gold-500/20"></div>
+                        <div class="absolute inset-16 rounded-full border border-gold-500/20"></div>
+                        <div class="absolute inset-28 rounded-full border border-gold-500/20"></div>
+                        
+                        <div class="absolute w-full h-[1px] bg-gold-500/30"></div>
+                        <div class="absolute h-full w-[1px] bg-gold-500/30"></div>
+
+                        <div class="absolute inset-0 rounded-full radar-sweeper pointer-events-none">
+                            <div class="w-1/2 h-1/2 bg-gradient-to-br from-tactical-green/30 to-transparent origin-bottom-right rounded-tl-full"></div>
+                            <div class="absolute top-1/2 left-1/2 w-1/2 h-[2px] bg-tactical-green shadow-[0_0_10px_#00ff66]"></div>
+                        </div>
+
+                        <div class="absolute top-24 left-28 w-3 h-3 bg-tactical-green rounded-full radar-ping"></div>
+                        <div class="absolute bottom-28 right-20 w-3 h-3 bg-gold-500 rounded-full radar-ping" style="animation-delay: 0.7s;"></div>
+                        <div class="absolute top-36 right-28 w-2.5 h-2.5 bg-tactical-cyan rounded-full radar-ping" style="animation-delay: 1.2s;"></div>
+
+                        <div class="z-10 text-center font-mono bg-army-900/90 border border-gold-500 p-3 rounded-sm">
+                            <i class="fa-solid fa-tower-broadcast text-gold-500 text-2xl mb-1"></i>
+                            <p class="text-[10px] text-gold-400 font-bold">PUSAT KENDALI JARINGAN</p>
+                            <p class="text-[8px] text-gray-400">6.8734° S, 107.5427° E</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- TENTANG KAMI SECTION -->
+    <section id="about" class="py-20 bg-army-900/60 border-t border-b border-army-700/60 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-gold-500 font-mono text-xs tracking-widest uppercase font-semibold">// PROFIL INSTITUSI</span>
+                <h2 class="text-3xl sm:text-5xl font-heading font-bold text-white mt-1 glitch-text">TULANG PUNGGUNG KOMUNIKASI TNI AD</h2>
+                <div class="w-20 h-1 bg-gold-500 mx-auto mt-4"></div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-5">
+                    <h3 class="text-2xl font-heading text-gold-400 uppercase font-bold">Menjaga Konektivitas dan Keamanan Informasi Komando</h3>
+                    <p class="text-gray-300 leading-relaxed font-body">
+                        Pusat Komunikasi dan Elektronika Angkatan Darat (Puskomlekad) adalah badan pelaksana pusat tingkat Markas Besar TNI AD yang bertugas membina fungsi komunikasi dan elektronika, meliputi pembinaan personel, materiil, serta piranti lunak komlek guna mendukung penyelenggaraan komando dan pengendalian (K4IPP) di seluruh satuan jajaran TNI AD.
+                    </p>
+                    <p class="text-gray-300 leading-relaxed font-body">
+                        Melalui jaringan komunikasi berbasis radio, satelit, serat optik, serta sistem persandian yang terintegrasi, Puskomlekad memastikan arus informasi komando tetap lancar, rahasia, dan aman dari gangguan maupun ancaman siber, sejalan dengan modernisasi teknologi komunikasi TNI AD.
+                    </p>
+                    
+                    <div class="pt-4 grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-army-950 border border-army-700 rounded-sm hud-bracket hud-bracket-inner">
+                            <i class="fa-solid fa-compass text-gold-500 text-2xl mb-2"></i>
+                            <h4 class="font-heading font-bold text-white text-lg">VISI STRATEGIS</h4>
+                            <p class="text-xs text-gray-400 mt-1 font-body">Menjadi pusat unggulan komunikasi elektronika yang modern, aman, dan handal bagi TNI AD.</p>
+                        </div>
+                        <div class="p-4 bg-army-950 border border-army-700 rounded-sm hud-bracket hud-bracket-inner">
+                            <i class="fa-solid fa-bullseye text-gold-500 text-2xl mb-2"></i>
+                            <h4 class="font-heading font-bold text-white text-lg">MISI UTAMA</h4>
+                            <p class="text-xs text-gray-400 mt-1 font-body">Menyelenggarakan pembinaan dan dukungan operasional komlek yang responsif dan aman siber.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-army-950 border border-army-700 p-6 rounded-sm text-center hud-bracket hud-bracket-inner hover:border-gold-500 transition-all">
+                        <div class="w-14 h-14 bg-army-900 border border-gold-500/40 rounded-full flex items-center justify-center mx-auto mb-4 text-gold-400 text-2xl">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <h4 class="font-heading text-xl font-bold text-white">KERAHASIAAN</h4>
+                        <p class="text-xs text-gray-400 mt-2 font-body">Menjaga kerahasiaan sandi dan data komando dari segala bentuk penyadapan.</p>
+                    </div>
+
+                    <div class="bg-army-950 border border-army-700 p-6 rounded-sm text-center hud-bracket hud-bracket-inner hover:border-gold-500 transition-all">
+                        <div class="w-14 h-14 bg-army-900 border border-gold-500/40 rounded-full flex items-center justify-center mx-auto mb-4 text-gold-400 text-2xl">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h4 class="font-heading text-xl font-bold text-white">INTEGRITAS</h4>
+                        <p class="text-xs text-gray-400 mt-2 font-body">Jujur, disiplin tinggi, serta menjunjung kode etik militer dan kehormatan korps.</p>
+                    </div>
+
+                    <div class="bg-army-950 border border-army-700 p-6 rounded-sm text-center hud-bracket hud-bracket-inner hover:border-gold-500 transition-all">
+                        <div class="w-14 h-14 bg-army-900 border border-gold-500/40 rounded-full flex items-center justify-center mx-auto mb-4 text-gold-400 text-2xl">
+                            <i class="fa-solid fa-network-wired"></i>
+                        </div>
+                        <h4 class="font-heading text-xl font-bold text-white">KESIGAPAN</h4>
+                        <p class="text-xs text-gray-400 mt-2 font-body">Sigap memulihkan dan mengamankan jaringan komunikasi di setiap kondisi medan.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PERALATAN KOMLEK SECTION -->
+    <section id="alutsista" class="py-20 bg-army-950 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+                <div>
+                    <span class="text-gold-500 font-mono text-xs tracking-widest uppercase font-semibold">// SARANA DAN PRASARANA KOMLEK</span>
+                    <h2 class="text-3xl sm:text-5xl font-heading font-bold text-white mt-1">KATALOG PERALATAN KOMUNIKASI ELEKTRONIKA</h2>
+                </div>
+                
+                <!-- Category Filters -->
+                <div class="flex flex-wrap gap-2 mt-6 md:mt-0" id="alutsista-filters">
+                    <button type="button" data-filter="all" class="sonar-btn filter-btn active bg-gold-500 text-army-950 font-heading font-bold px-4 py-2 text-sm uppercase transition-all clip-tactical">SEMUA KATEGORI</button>
+                    <button type="button" data-filter="radio" class="sonar-btn filter-btn bg-army-900 hover:bg-army-800 border border-army-700 text-gray-300 font-heading font-bold px-4 py-2 text-sm uppercase transition-all clip-tactical">RADIO &amp; JARINGAN</button>
+                    <button type="button" data-filter="satelit" class="sonar-btn filter-btn bg-army-900 hover:bg-army-800 border border-army-700 text-gray-300 font-heading font-bold px-4 py-2 text-sm uppercase transition-all clip-tactical">SATELIT</button>
+                    <button type="button" data-filter="sandi" class="sonar-btn filter-btn bg-army-900 hover:bg-army-800 border border-army-700 text-gray-300 font-heading font-bold px-4 py-2 text-sm uppercase transition-all clip-tactical">SANDI &amp; SIBER</button>
+                </div>
+            </div>
+
+            <!-- Peralatan Komlek Cards Grid with HUD Brackets -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="alutsista-grid">
+                
+                <!-- Card 1: Radio Taktis -->
+                <div class="alutsista-card bg-army-900 border border-army-700 rounded-sm overflow-hidden hud-bracket hud-bracket-inner group" data-category="radio">
+                    <div class="equip-icon-panel">
+                        <i class="fa-solid fa-walkie-talkie text-gold-500/80 text-7xl group-hover:scale-110 transition-transform duration-500"></i>
+                        <img src="img/repeater.jpg" alt="Radio Taktis Trunking VHF/UHF" loading="lazy" onerror="this.style.display='none'" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-army-900/70 via-transparent to-transparent pointer-events-none"></div>
+                        <span class="absolute top-3 right-3 z-10 bg-army-950/90 text-gold-400 font-mono text-[10px] px-2.5 py-1 border border-gold-500/40">RADIO &amp; JARINGAN</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-heading font-bold text-white group-hover:text-gold-400 transition-colors">REPEATER VHF/UHF</h3>
+                        <p class="text-xs text-gray-400 mt-1 font-mono">KODE: K-KOM-01 // ALAT KOMUNIKASI LAPANGAN</p>
+
+                        <!-- Tactical Spec Bars -->
+                        <div class="mt-4 space-y-2 font-mono text-xs">
+                            <div>
+                                <div class="flex justify-between text-[10px] text-gray-400 mb-0.5"><span>JANGKAUAN SINYAL</span><span>85%</span></div>
+                                <div class="w-full h-1.5 bg-army-950 rounded-full overflow-hidden border border-army-700">
+                                    <div class="h-full bg-gold-500 w-[85%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[10px] text-gray-400 mb-0.5"><span>KETAHANAN BATERAI</span><span>90%</span></div>
+                                <div class="w-full h-1.5 bg-army-950 rounded-full overflow-hidden border border-army-700">
+                                    <div class="h-full bg-tactical-green w-[90%]"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="openAlutsistaModal('RADIO TAKTIS TRUNKING VHF/UHF', 'Perangkat Komunikasi Lapangan Serba Cuaca', 'radio', 'Transmisi Suara Real-time', '50 KM (Line of Sight)', 'Enkripsi suara AES-256, mode frequency hopping anti-jamming, konektor antena eksternal', 'Tahan air dan debu (IP67), dilengkapi modul GPS tracking serta interoperabilitas penuh dengan jaringan komando pusat.')" class="sonar-btn mt-5 w-full bg-army-800 hover:bg-gold-500 hover:text-army-950 text-white font-heading font-semibold py-2.5 text-center text-sm transition-colors clip-tactical">
+                            DETAIL SPESIFIKASI
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 2: Satelit -->
+                <div class="alutsista-card bg-army-900 border border-army-700 rounded-sm overflow-hidden hud-bracket hud-bracket-inner group" data-category="satelit">
+                    <div class="equip-icon-panel">
+                        <i class="fa-solid fa-satellite-dish text-gold-500/80 text-7xl group-hover:scale-110 transition-transform duration-500"></i>
+                        <img src="img/drone-mil.jpg" alt="Terminal VSAT Komando" loading="lazy" onerror="this.style.display='none'" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-army-900/70 via-transparent to-transparent pointer-events-none"></div>
+                        <span class="absolute top-3 right-3 z-10 bg-army-950/90 text-gold-400 font-mono text-[10px] px-2.5 py-1 border border-gold-500/40">SATELIT</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-heading font-bold text-white group-hover:text-gold-400 transition-colors">DRONE THERMAL</h3>
+                        <p class="text-xs text-gray-400 mt-1 font-mono">KODE: D-THM-01</p>
+
+                        <div class="mt-4 space-y-2 font-mono text-xs">
+                            <div>
+                                <div class="flex justify-between text-[10px] text-gray-400 mb-0.5"><span>JANGKAUAN</span><span>88%</span></div>
+                                <div class="w-full h-1.5 bg-army-950 rounded-full overflow-hidden border border-army-700">
+                                    <div class="h-full bg-gold-500 w-[88%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[10px] text-gray-400 mb-0.5"><span>STABILITAS SINYAL</span><span>92%</span></div>
+                                <div class="w-full h-1.5 bg-army-950 rounded-full overflow-hidden border border-army-700">
+                                    <div class="h-full bg-tactical-green w-[92%]"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="openAlutsistaModal('TERMINAL VSAT KOMANDO', 'Sistem Komunikasi Data dan Suara Berbasis Satelit', 'satelit', 'Hingga 10 Mbps', 'Cakupan Global (Satelit)', 'Antena parabola portable, modem satelit terenkripsi, catu daya cadangan mandiri', 'Menjamin komunikasi data dan suara tetap tersambung di daerah terpencil tanpa infrastruktur seluler.')" class="sonar-btn mt-5 w-full bg-army-800 hover:bg-gold-500 hover:text-army-950 text-white font-heading font-semibold py-2.5 text-center text-sm transition-colors clip-tactical">
+                            DETAIL SPESIFIKASI
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 3: Sandi & Siber -->
+                <div class="alutsista-card bg-army-900 border border-army-700 rounded-sm overflow-hidden hud-bracket hud-bracket-inner group" data-category="sandi">
+                    <div class="equip-icon-panel">
+                        <i class="fa-solid fa-lock text-gold-500/80 text-7xl group-hover:scale-110 transition-transform duration-500"></i>
+                        <img src="img/senjata.jpg" alt="Sistem Persandian dan Keamanan Siber" loading="lazy" onerror="this.style.display='none'" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-army-900/70 via-transparent to-transparent pointer-events-none"></div>
+                        <span class="absolute top-3 right-3 z-10 bg-army-950/90 text-gold-400 font-mono text-[10px] px-2.5 py-1 border border-gold-500/40">SANDI &amp; SIBER</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-2xl font-heading font-bold text-white group-hover:text-gold-400 transition-colors">SENJATA &amp; ANTI DRONE</h3>
+                        <p class="text-xs text-gray-400 mt-1 font-mono">KODE: K -KOM-09 // PERANGKAT DRONE</p>
+
+                        <div class="mt-4 space-y-2 font-mono text-xs">
+                            <div>
+                                <div class="flex justify-between text-[10px] text-gray-400 mb-0.5"><span>TINGKAT ENKRIPSI</span><span>98%</span></div>
+                                <div class="w-full h-1.5 bg-army-950 rounded-full overflow-hidden border border-army-700">
+                                    <div class="h-full bg-gold-500 w-[98%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[10px] text-gray-400 mb-0.5"><span>DETEKSI ANCAMAN SIBER</span><span>90%</span></div>
+                                <div class="w-full h-1.5 bg-army-950 rounded-full overflow-hidden border border-army-700">
+                                    <div class="h-full bg-tactical-green w-[90%]"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="openAlutsistaModal('SISTEM PERSANDIAN & KEAMANAN SIBER', 'Perangkat Kriptografi dan Pengamanan Jaringan Komando', 'sandi', 'Enkripsi Real-time', 'Jaringan Internal TNI AD', 'Algoritma kriptografi nasional, firewall berlapis, sistem deteksi intrusi (IDS/IPS)', 'Melindungi lalu lintas data dan komunikasi komando dari penyadapan, peretasan, dan serangan siber.')" class="sonar-btn mt-5 w-full bg-army-800 hover:bg-gold-500 hover:text-army-950 text-white font-heading font-semibold py-2.5 text-center text-sm transition-colors clip-tactical">
+                            DETAIL SPESIFIKASI
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <p id="alutsista-empty" class="hidden text-center text-gray-400 font-mono text-sm mt-8">Tidak ada unit pada kategori ini.</p>
+        </div>
+    </section>
+
+    <!-- KEKUATAN PERSONEL & STATISTIK -->
+    <section id="personel" class="py-20 bg-army-900/60 border-t border-b border-army-700/60 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-gold-500 font-mono text-xs tracking-widest uppercase font-semibold">// DATA DAN KOMANDO</span>
+                <h2 class="text-3xl sm:text-5xl font-heading font-bold text-white mt-1">KEKUATAN PERSONEL &amp; STRUKTUR</h2>
+                <div class="w-20 h-1 bg-gold-500 mx-auto mt-4"></div>
+            </div>
+
+            <!-- Animated Counters -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                <div class="bg-army-950 border border-army-700 p-6 rounded-sm text-center hud-bracket hud-bracket-inner">
+                    <i class="fa-solid fa-users-line text-3xl text-gold-500 mb-3"></i>
+                    <p class="text-3xl sm:text-4xl font-heading font-bold text-white counter" data-target="8500">0</p>
+                    <p class="text-xs font-mono text-gray-400 mt-1 uppercase">Personel Komlek Aktif</p>
+                </div>
+
+                <div class="bg-army-950 border border-army-700 p-6 rounded-sm text-center hud-bracket hud-bracket-inner">
+                    <i class="fa-solid fa-satellite-dish text-3xl text-gold-500 mb-3"></i>
+                    <p class="text-3xl sm:text-4xl font-heading font-bold text-white counter" data-target="3200">0</p>
+                    <p class="text-xs font-mono text-gray-400 mt-1 uppercase">Unit Peralatan Komlek</p>
+                </div>
+
+                <div class="bg-army-950 border border-army-700 p-6 rounded-sm text-center hud-bracket hud-bracket-inner">
+                    <i class="fa-solid fa-globe-asia text-3xl text-gold-500 mb-3"></i>
+                    <p class="text-3xl sm:text-4xl font-heading font-bold text-white counter" data-target="34">0</p>
+                    <p class="text-xs font-mono text-gray-400 mt-1 uppercase">Satuan Komlek Kodam</p>
+                </div>
+
+                <div class="bg-army-950 border border-army-700 p-6 rounded-sm text-center hud-bracket hud-bracket-inner">
+                    <i class="fa-solid fa-award text-3xl text-gold-500 mb-3"></i>
+                    <p class="text-3xl sm:text-4xl font-heading font-bold text-white counter" data-target="45">0</p>
+                    <p class="text-xs font-mono text-gray-400 mt-1 uppercase">Sertifikasi &amp; Penghargaan</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRESTASI PRAJURIT SECTION -->
+    <section id="prestasi" class="py-20 bg-army-950 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-gold-500 font-mono text-xs tracking-widest uppercase font-semibold">// KEHORMATAN DAN DEDIKASI</span>
+                <h2 class="text-3xl sm:text-5xl font-heading font-bold text-white mt-1">PRAJURIT KOMLEK BERPRESTASI</h2>
+                <div class="w-20 h-1 bg-gold-500 mx-auto mt-4"></div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-army-900 border border-army-700 p-6 rounded-sm hud-bracket hud-bracket-inner">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200" alt="Prajurit 1" class="w-16 h-16 rounded-full object-cover border-2 border-gold-500">
+                        <div>
+                            <h4 class="font-heading font-bold text-lg text-white">KOLONEL CKM AHMAD RIFA'I</h4>
+                            <p class="text-[10px] font-mono text-gold-400">DETASEMEN KOMLEK KHUSUS</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-300 font-body">Memimpin pemulihan jaringan komando saat operasi lintas medan berat tanpa jeda komunikasi, menjaga kesinambungan arus perintah dari markas ke lapangan.</p>
+                </div>
+
+                <div class="bg-army-900 border border-army-700 p-6 rounded-sm hud-bracket hud-bracket-inner">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200" alt="Prajurit 2" class="w-16 h-16 rounded-full object-cover border-2 border-gold-500">
+                        <div>
+                            <h4 class="font-heading font-bold text-lg text-white">MAYOR CKM SARAH LESTARI</h4>
+                            <p class="text-[10px] font-mono text-gold-400">DETASEMEN SANDI &amp; SIBER</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-300 font-body">Meraih predikat terbaik dalam latihan pertahanan siber gabungan, berhasil mendeteksi dan menetralisir simulasi serangan terhadap jaringan komando.</p>
+                </div>
+
+                <div class="bg-army-900 border border-army-700 p-6 rounded-sm hud-bracket hud-bracket-inner">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200" alt="Prajurit 3" class="w-16 h-16 rounded-full object-cover border-2 border-gold-500">
+                        <div>
+                            <h4 class="font-heading font-bold text-lg text-white">LETDA CKM YUDHA PRATAMA</h4>
+                            <p class="text-[10px] font-mono text-gold-400">TIM MOBILE KOMLEK BENCANA</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-300 font-body">Memimpin pemasangan cepat jaringan komunikasi darurat di wilayah bencana terisolir, memulihkan konektivitas posko dalam hitungan jam.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- KONTAK & LOKASI SECTION -->
+    <section id="kontak" class="py-20 bg-army-900/60 border-t border-army-700/60 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="space-y-6">
+                    <div>
+                        <span class="text-gold-500 font-mono text-xs tracking-widest uppercase font-semibold">// MARKAS PUSKOMLEKAD</span>
+                        <h2 class="text-3xl sm:text-5xl font-heading font-bold text-white mt-1">PUSAT KOMLEK TERPADU</h2>
+                    </div>
+
+                    <div class="space-y-4 font-mono text-sm">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-army-950 border border-gold-500/40 rounded-sm flex items-center justify-center text-gold-400 shrink-0">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-xs">ALAMAT MARKAS BESAR:</p>
+                                <p class="text-white font-semibold">Jl. Gatot Subroto No.5, Kelurahan Karangmekar, Kecamatan Cimahi Tengah, Kota Cimahi, Jawa Barat, 40523.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-army-950 border border-gold-500/40 rounded-sm flex items-center justify-center text-gold-400 shrink-0">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-xs">HOTLINE PUSKOMLEKAD:</p>
+                                <p class="text-white font-semibold">(+6222) 6630327</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="bg-army-950 border border-army-700 p-8 rounded-sm hud-bracket hud-bracket-inner">
+                    <h3 class="text-2xl font-heading font-bold text-white mb-6 uppercase">KIRIM PESAN RESMI</h3>
+                    <form id="contact-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-mono text-gray-400 mb-1">NAMA LENGKAP *</label>
+                            <input type="text" required class="w-full bg-army-900 border border-army-700 px-4 py-2.5 rounded-sm text-white focus:outline-none focus:border-gold-500 text-sm font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-gray-400 mb-1">ISIKAN PESAN *</label>
+                            <textarea rows="4" required class="w-full bg-army-900 border border-army-700 px-4 py-2.5 rounded-sm text-white focus:outline-none focus:border-gold-500 text-sm font-mono"></textarea>
+                        </div>
+                        <button type="submit" class="sonar-btn w-full bg-gold-500 hover:bg-gold-400 text-army-950 font-heading font-bold py-3 text-sm uppercase tracking-wider clip-tactical">
+                            KIRIM ENKRIPSI PESAN
+                        </button>
+                    </form>
+                    <div id="form-feedback" class="hidden mt-4 p-3 bg-emerald-900/80 border border-emerald-500 text-emerald-200 text-xs font-mono text-center">
+                        Pesan terkirim dengan sukses ke Pusat Komlek
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PERALATAN KOMLEK DETAIL MODAL -->
+    <div id="alutsista-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-army-950 border border-gold-500/50 rounded-sm max-w-2xl w-full p-6 relative hud-bracket hud-bracket-inner max-h-[90vh] overflow-y-auto">
+            <button onclick="closeAlutsistaModal()" type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gold-400 text-xl font-bold">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 id="modal-title" class="text-3xl font-heading font-bold text-white mb-1"></h3>
+            <p id="modal-subtitle" class="text-xs font-mono text-gold-400 mb-4"></p>
+
+            <div id="modal-icon-panel" class="w-full h-52 rounded-sm border border-army-700 mb-4 flex items-center justify-center bg-army-900">
+                <i id="modal-icon" class="fa-solid fa-tower-broadcast text-gold-500/80 text-7xl"></i>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 bg-army-900 p-4 rounded-sm font-mono text-xs mb-4">
+                <div><span class="text-gray-400 block">PERFORMA UTAMA:</span> <span id="modal-speed" class="text-white font-bold"></span></div>
+                <div><span class="text-gray-400 block">JANGKAUAN OPERASI:</span> <span id="modal-range" class="text-white font-bold"></span></div>
+            </div>
+
+            <div class="space-y-3 text-sm">
+                <div>
+                    <h4 class="font-heading font-bold text-gold-400">SPESIFIKASI TEKNIS</h4>
+                    <p id="modal-weapons" class="text-gray-300 text-xs font-mono mt-1"></p>
+                </div>
+                <div>
+                    <h4 class="font-heading font-bold text-gold-400">KEUNGGULAN TAKTIS</h4>
+                    <p id="modal-features" class="text-gray-300 text-xs mt-1 leading-relaxed font-body"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMA & BAHASA -->
+    <script>
+/* PUSKOMLEKAD - Mode Gelap/Terang + Bahasa Indonesia/Inggris */
+(function () {
+  var root = document.documentElement;
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  /* ---------- KAMUS ID -> EN ---------- */
+  var dict = {
+    "PUSAT KOMUNIKASI & ELEKTRONIKA TNI AD": "ARMY COMMUNICATIONS & ELECTRONICS CENTER",
+    "TENTANG KAMI": "ABOUT US", "PERALATAN KOMLEK": "COMM-ELEC EQUIPMENT", "KEKUATAN PERSONEL": "PERSONNEL STRENGTH",
+    "PRESTASI": "ACHIEVEMENTS", "KONTAK": "CONTACT", "Pusat Komando": "Command Center",
+    "PRESTASI PRAJURIT": "SOLDIER ACHIEVEMENTS", "KONTAK KOMANDO": "COMMAND CONTACT",
+    "JARINGAN AMAN // STATUS: SIAP SIAGA KOMANDO": "SECURE NETWORK // STATUS: COMMAND STANDBY",
+    "URAT NADI KOMUNIKASI": "THE LIFELINE OF COMMUNICATION",
+    "Pusat Komunikasi dan Elektronika TNI Angkatan Darat (Puskomlekad) menyelenggarakan pembinaan dan dukungan operasional komunikasi elektronika guna menjamin kelancaran, kerahasiaan, dan keamanan arus informasi komando dan pengendalian di seluruh jajaran TNI AD.":
+      "The Army Communications and Electronics Center (Puskomlekad) carries out development and operational support for electronic communications to ensure the smoothness, confidentiality, and security of command and control information flow across the entire Indonesian Army.",
+    "JELAJAHI PERALATAN KOMLEK": "EXPLORE EQUIPMENT", "PROFIL INSTITUSI": "INSTITUTION PROFILE",
+    "UPTIME JARINGAN": "NETWORK UPTIME", "PROVINSI TERHUBUNG": "PROVINCES CONNECTED", "PENGAMANAN SIBER": "CYBER SECURITY",
+    "PUSAT KENDALI JARINGAN": "NETWORK CONTROL CENTER",
+    "// PROFIL INSTITUSI": "// INSTITUTION PROFILE",
+    "TULANG PUNGGUNG KOMUNIKASI TNI AD": "BACKBONE OF ARMY COMMUNICATIONS",
+    "Menjaga Konektivitas dan Keamanan Informasi Komando": "Safeguarding Command Connectivity and Information Security",
+    "Pusat Komunikasi dan Elektronika Angkatan Darat (Puskomlekad) adalah badan pelaksana pusat tingkat Markas Besar TNI AD yang bertugas membina fungsi komunikasi dan elektronika, meliputi pembinaan personel, materiil, serta piranti lunak komlek guna mendukung penyelenggaraan komando dan pengendalian (K4IPP) di seluruh satuan jajaran TNI AD.":
+      "The Army Communications and Electronics Center (Puskomlekad) is a central executive body at Army Headquarters level responsible for developing the communications and electronics function, covering personnel, materiel, and comm-elec software to support command and control (K4IPP) across all Army units.",
+    "Melalui jaringan komunikasi berbasis radio, satelit, serat optik, serta sistem persandian yang terintegrasi, Puskomlekad memastikan arus informasi komando tetap lancar, rahasia, dan aman dari gangguan maupun ancaman siber, sejalan dengan modernisasi teknologi komunikasi TNI AD.":
+      "Through integrated radio, satellite, and fiber-optic communication networks and cryptographic systems, Puskomlekad keeps command information flowing smoothly, confidentially, and safely from disruption and cyber threats, in line with the modernization of Army communication technology.",
+    "VISI STRATEGIS": "STRATEGIC VISION",
+    "Menjadi pusat unggulan komunikasi elektronika yang modern, aman, dan handal bagi TNI AD.": "To become a modern, secure, and reliable center of excellence in electronic communications for the Army.",
+    "MISI UTAMA": "MAIN MISSION",
+    "Menyelenggarakan pembinaan dan dukungan operasional komlek yang responsif dan aman siber.": "To deliver responsive, cyber-secure comm-elec development and operational support.",
+    "KERAHASIAAN": "CONFIDENTIALITY", "Menjaga kerahasiaan sandi dan data komando dari segala bentuk penyadapan.": "Protecting cipher and command data from every form of interception.",
+    "INTEGRITAS": "INTEGRITY", "Jujur, disiplin tinggi, serta menjunjung kode etik militer dan kehormatan korps.": "Honest, highly disciplined, and upholding the military code of ethics and the honor of the corps.",
+    "KESIGAPAN": "READINESS", "Sigap memulihkan dan mengamankan jaringan komunikasi di setiap kondisi medan.": "Quick to restore and secure communication networks in any terrain condition.",
+    "// SARANA DAN PRASARANA KOMLEK": "// COMM-ELEC FACILITIES & INFRASTRUCTURE",
+    "KATALOG PERALATAN KOMUNIKASI ELEKTRONIKA": "COMMUNICATIONS & ELECTRONICS EQUIPMENT CATALOG",
+    "SEMUA KATEGORI": "ALL CATEGORIES", "RADIO & JARINGAN": "RADIO & NETWORK", "SATELIT": "SATELLITE", "SANDI & SIBER": "CRYPTO & CYBER",
+    "RADIO TAKTIS TRUNKING VHF/UHF": "VHF/UHF TRUNKING TACTICAL RADIO",
+    "KODE: K-KOM-01 // ALAT KOMUNIKASI LAPANGAN": "CODE: K-KOM-01 // FIELD COMMUNICATION DEVICE",
+    "JANGKAUAN SINYAL": "SIGNAL RANGE", "KETAHANAN BATERAI": "BATTERY ENDURANCE", "DETAIL SPESIFIKASI": "SPECIFICATION DETAILS",
+    "TERMINAL VSAT KOMANDO": "COMMAND VSAT TERMINAL",
+    "KODE: K-KOM-05 // SISTEM KOMUNIKASI SATELIT": "CODE: K-KOM-05 // SATELLITE COMMUNICATION SYSTEM",
+    "KECEPATAN TRANSFER DATA": "DATA TRANSFER SPEED", "STABILITAS SINYAL": "SIGNAL STABILITY",
+    "SISTEM PERSANDIAN & KEAMANAN SIBER": "CRYPTOGRAPHY & CYBER SECURITY SYSTEM",
+    "KODE: K-KOM-09 // PERANGKAT KRIPTO": "CODE: K-KOM-09 // CRYPTO DEVICE",
+    "TINGKAT ENKRIPSI": "ENCRYPTION LEVEL", "DETEKSI ANCAMAN SIBER": "CYBER THREAT DETECTION",
+    "Tidak ada unit pada kategori ini.": "No units in this category.",
+    "// DATA DAN KOMANDO": "// DATA & COMMAND", "KEKUATAN PERSONEL & STRUKTUR": "PERSONNEL STRENGTH & STRUCTURE",
+    "Personel Komlek Aktif": "Active Comm-Elec Personnel", "Unit Peralatan Komlek": "Comm-Elec Equipment Units",
+    "Satuan Komlek Kodam": "Regional Command Comm-Elec Units", "Sertifikasi & Penghargaan": "Certifications & Awards",
+    "// KEHORMATAN DAN DEDIKASI": "// HONOR & DEDICATION", "PRAJURIT KOMLEK BERPRESTASI": "OUTSTANDING COMM-ELEC SOLDIERS",
+    "KOLONEL CKM AHMAD RIFA'I": "COLONEL CKM AHMAD RIFA'I", "DETASEMEN KOMLEK KHUSUS": "SPECIAL COMM-ELEC DETACHMENT",
+    "Memimpin pemulihan jaringan komando saat operasi lintas medan berat tanpa jeda komunikasi, menjaga kesinambungan arus perintah dari markas ke lapangan.":
+      "Led command network recovery during heavy-terrain cross-country operations without any communication gap, sustaining the flow of orders from headquarters to the field.",
+    "MAYOR CKM SARAH LESTARI": "MAJOR CKM SARAH LESTARI", "DETASEMEN SANDI & SIBER": "CRYPTO & CYBER DETACHMENT",
+    "Meraih predikat terbaik dalam latihan pertahanan siber gabungan, berhasil mendeteksi dan menetralisir simulasi serangan terhadap jaringan komando.":
+      "Earned top honors in a joint cyber defense exercise, successfully detecting and neutralizing simulated attacks on the command network.",
+    "LETDA CKM YUDHA PRATAMA": "2ND LT CKM YUDHA PRATAMA", "TIM MOBILE KOMLEK BENCANA": "DISASTER COMM-ELEC MOBILE TEAM",
+    "Memimpin pemasangan cepat jaringan komunikasi darurat di wilayah bencana terisolir, memulihkan konektivitas posko dalam hitungan jam.":
+      "Led the rapid deployment of emergency communication networks in isolated disaster areas, restoring command post connectivity within hours.",
+    "// MARKAS PUSKOMLEKAD": "// PUSKOMLEKAD HEADQUARTERS", "PUSAT KOMLEK TERPADU": "INTEGRATED COMM-ELEC CENTER",
+    "ALAMAT MARKAS BESAR:": "HEADQUARTERS ADDRESS:", "HOTLINE PUSKOMLEKAD:": "PUSKOMLEKAD HOTLINE:",
+    "KIRIM PESAN RESMI": "SEND OFFICIAL MESSAGE", "NAMA LENGKAP *": "FULL NAME *", "ISIKAN PESAN *": "YOUR MESSAGE *",
+    "KIRIM ENKRIPSI PESAN": "SEND ENCRYPTED MESSAGE",
+    "Pesan terkirim dengan sukses ke Pusat Komlek": "Message successfully sent to the Comm-Elec Center",
+    "PERFORMA UTAMA:": "MAIN PERFORMANCE:", "JANGKAUAN OPERASI:": "OPERATING RANGE:",
+    "SPESIFIKASI TEKNIS": "TECHNICAL SPECIFICATIONS", "KEUNGGULAN TAKTIS": "TACTICAL ADVANTAGES",
+    /* isi modal detail */
+    "Perangkat Komunikasi Lapangan Serba Cuaca": "All-Weather Field Communication Device",
+    "Transmisi Suara Real-time": "Real-time Voice Transmission",
+    "Enkripsi suara AES-256, mode frequency hopping anti-jamming, konektor antena eksternal": "AES-256 voice encryption, anti-jamming frequency hopping mode, external antenna connector",
+    "Tahan air dan debu (IP67), dilengkapi modul GPS tracking serta interoperabilitas penuh dengan jaringan komando pusat.": "Waterproof and dustproof (IP67), equipped with a GPS tracking module and full interoperability with the central command network.",
+    "Sistem Komunikasi Data dan Suara Berbasis Satelit": "Satellite-Based Data and Voice Communication System",
+    "Hingga 10 Mbps": "Up to 10 Mbps", "Cakupan Global (Satelit)": "Global Coverage (Satellite)",
+    "Antena parabola portable, modem satelit terenkripsi, catu daya cadangan mandiri": "Portable dish antenna, encrypted satellite modem, independent backup power supply",
+    "Menjamin komunikasi data dan suara tetap tersambung di daerah terpencil tanpa infrastruktur seluler.": "Keeps data and voice communication connected in remote areas without cellular infrastructure.",
+    "Perangkat Kriptografi dan Pengamanan Jaringan Komando": "Cryptographic Devices and Command Network Security",
+    "Enkripsi Real-time": "Real-time Encryption", "Jaringan Internal TNI AD": "TNI AD Internal Network",
+    "Algoritma kriptografi nasional, firewall berlapis, sistem deteksi intrusi (IDS/IPS)": "National cryptographic algorithms, layered firewalls, intrusion detection/prevention systems (IDS/IPS)",
+    "Melindungi lalu lintas data dan komunikasi komando dari penyadapan, peretasan, dan serangan siber.": "Protects command data traffic and communications from interception, hacking, and cyber attacks."
+  };
+  var rev = {};
+  Object.keys(dict).forEach(function (k) { rev[dict[k]] = k; });
+
+  var TITLE = {
+    id: "PUSKOMLEKAD - Pusat Komunikasi dan Elektronika TNI Angkatan Darat",
+    en: "PUSKOMLEKAD - Army Communications and Electronics Center"
+  };
+  var WORDS = {
+    id: ["MENGAMANKAN JARINGAN KOMANDO", "MENJAGA KERAHASIAAN SANDI", "SIAP SIAGA 24/7"],
+    en: ["SECURING COMMAND NETWORKS", "PROTECTING CIPHER SECRECY", "READY 24/7"]
+  };
+
+  var theme = store.get('pk-theme') === 'light' ? 'light' : 'dark';
+  var lang = store.get('pk-lang') === 'en' ? 'en' : 'id';
+  window.PK_WORDS = function () { return WORDS[lang]; };
+
+  /* ---------- CSS: variabel warna gelap & terang ---------- */
+  var st = document.createElement('style');
+  st.textContent =
+    ':root{--a950:10 13 10;--a900:18 22 18;--a800:26 34 26;--a700:37 48 37;--a600:52 69 52;--a500:72 94 72;--a400:100 130 100;' +
+    '--g500:212 175 55;--g400:229 193 88;--g300:243 215 131;--w:255 255 255;--t200:229 231 235;--t300:209 213 219;--t400:156 163 175;--ink:229 231 235}' +
+    'html.light{--a950:245 242 232;--a900:236 232 219;--a800:226 221 205;--a700:200 194 174;--a600:160 154 132;--a500:120 116 96;--a400:90 100 80;' +
+    '--g500:138 101 0;--g400:111 82 0;--g300:90 66 0;--w:22 33 15;--t200:31 42 31;--t300:45 58 45;--t400:74 90 74;--ink:31 42 31}' +
+    'body{background-color:rgb(var(--a950))!important;color:rgb(var(--ink))!important;transition:background-color .3s,color .3s}' +
+    '.equip-icon-panel{background:radial-gradient(circle at 50% 30%,rgb(var(--g500)/.12),transparent 60%),rgb(var(--a900))!important}' +
+    'html.light #typed-headline{--tw-gradient-to:rgb(var(--g400))!important}' +
+    'html.light a.bg-gradient-to-r{--tw-gradient-to:rgb(var(--g400))!important}' +
+    'html.light #coords-display{background:rgba(245,242,232,.92)!important}' +
+    'html.light .scanline-container::after{opacity:.3}' +
+    'html.light .tactical-grid{background-image:linear-gradient(to right,rgba(138,101,0,.09) 1px,transparent 1px),linear-gradient(to bottom,rgba(138,101,0,.09) 1px,transparent 1px)!important}' +
+    'html.light input,html.light textarea{color:#16210f!important}' +
+    '.pk-tog{border:1px solid rgb(var(--g500)/.6);color:rgb(var(--g400));background:rgb(var(--a900));font-family:"Share Tech Mono",monospace;font-size:12px;font-weight:700;padding:.5rem .7rem;line-height:1;transition:all .2s}' +
+    '.pk-tog:hover{background:rgb(var(--g500));color:rgb(var(--a950))}';
+  document.head.appendChild(st);
+
+  /* ---------- Tombol toggle di navbar ---------- */
+  var actions = document.getElementById('mobile-menu-btn').parentElement;
+  var wrap = document.createElement('div');
+  wrap.className = 'flex items-center space-x-2';
+  wrap.innerHTML =
+    '<button id="lang-toggle" type="button" class="pk-tog"><i class="fa-solid fa-language" style="margin-right:.35rem"></i><span id="lang-label"></span></button>' +
+    '<button id="theme-toggle" type="button" class="pk-tog"><i id="theme-icon" class="fa-solid"></i></button>';
+  actions.insertBefore(wrap, actions.firstChild);
+  var langLabel = document.getElementById('lang-label');
+  var themeIcon = document.getElementById('theme-icon');
+  var langBtn = document.getElementById('lang-toggle');
+  var themeBtn = document.getElementById('theme-toggle');
+
+  /* ---------- Tema ---------- */
+  function applyTheme() {
+    root.classList.toggle('light', theme === 'light');
+    themeIcon.className = 'fa-solid ' + (theme === 'light' ? 'fa-moon' : 'fa-sun');
+    var lbl = lang === 'en'
+      ? (theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode')
+      : (theme === 'light' ? 'Ganti ke mode gelap' : 'Ganti ke mode terang');
+    themeBtn.title = lbl; themeBtn.setAttribute('aria-label', lbl);
+  }
+  themeBtn.addEventListener('click', function () {
+    theme = theme === 'light' ? 'dark' : 'light';
+    store.set('pk-theme', theme); applyTheme();
+  });
+
+  /* ---------- Bahasa ---------- */
+  var items = [];
+  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode: function (n) {
+      var p = n.parentNode;
+      if (!p || /^(SCRIPT|STYLE)$/.test(p.nodeName) || (p.closest && p.closest('#typed-headline, #lang-toggle'))) return NodeFilter.FILTER_REJECT;
+      return n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+  var node;
+  while ((node = walker.nextNode())) {
+    var key = node.nodeValue.replace(/\s+/g, ' ').trim();
+    if (dict[key]) {
+      items.push({ n: node, k: key, pre: node.nodeValue.match(/^\s*/)[0], post: node.nodeValue.match(/\s*$/)[0] });
+    }
+  }
+
+  var modalIds = ['modal-title', 'modal-subtitle', 'modal-speed', 'modal-range', 'modal-weapons', 'modal-features'];
+  function translateModal() {
+    modalIds.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var t = el.textContent.trim();
+      var out = lang === 'en' ? dict[t] : rev[t];
+      if (out && out !== t) el.textContent = out;
+    });
+  }
+  var mo = new MutationObserver(translateModal);
+  modalIds.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) mo.observe(el, { childList: true, characterData: true, subtree: true });
+  });
+
+  function applyLang() {
+    items.forEach(function (it) { it.n.nodeValue = it.pre + (lang === 'en' ? dict[it.k] : it.k) + it.post; });
+    root.lang = lang;
+    document.title = TITLE[lang];
+    langLabel.textContent = lang === 'en' ? 'ID' : 'EN';
+    var ll = lang === 'en' ? 'Ganti ke Bahasa Indonesia' : 'Switch to English'; langBtn.title = ll; langBtn.setAttribute('aria-label', ll);
+    translateModal();
+    applyTheme();
+  }
+  langBtn.addEventListener('click', function () {
+    lang = lang === 'en' ? 'id' : 'en';
+    store.set('pk-lang', lang); applyLang();
+  });
+
+  applyLang();
+})();
+
+    </script>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Mouse Follower HUD Crosshair & Coordinates Tracking (desktop only)
+        const reticle = document.getElementById('mouse-reticle');
+        const coordsDisplay = document.getElementById('coords-display');
+
+        document.addEventListener('mousemove', (e) => {
+            reticle.style.opacity = '1';
+            reticle.style.left = `${e.clientX}px`;
+            reticle.style.top = `${e.clientY}px`;
+            coordsDisplay.innerText = `X:${e.clientX} Y:${e.clientY}`;
+        });
+
+        document.addEventListener('mouseleave', () => {
+            reticle.style.opacity = '0';
+        });
+
+        // Tactical Sonar Ripple Click Feedback
+        document.querySelectorAll('.sonar-btn').forEach(button => {
+            button.addEventListener('click', function (e) {
+                const circle = document.createElement('span');
+                circle.classList.add('sonar-ripple');
+                const rect = this.getBoundingClientRect();
+                circle.style.left = `${e.clientX - rect.left}px`;
+                circle.style.top = `${e.clientY - rect.top}px`;
+                this.style.position = this.style.position || 'relative';
+                this.style.overflow = 'hidden';
+                this.appendChild(circle);
+                setTimeout(() => circle.remove(), 600);
+            });
+        });
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuIcon = document.getElementById('mobile-menu-icon');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            const isHidden = mobileMenu.classList.contains('hidden');
+            mobileMenu.classList.toggle('hidden');
+            mobileMenuIcon.classList.toggle('fa-bars', !isHidden);
+            mobileMenuIcon.classList.toggle('fa-xmark', isHidden);
+        });
+
+        // Close mobile menu automatically after tapping a link
+        document.querySelectorAll('.mobile-link').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                mobileMenuIcon.classList.remove('fa-xmark');
+                mobileMenuIcon.classList.add('fa-bars');
+            });
+        });
+
+        // Typing Headline Effect
+        const words = ["MENGAMANKAN JARINGAN KOMANDO", "MENJAGA KERAHASIAAN SANDI", "SIAP SIAGA 24/7"];
+        let wordIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typedElement = document.getElementById('typed-headline');
+
+        function typeEffect() {
+            const currentWord = (window.PK_WORDS ? window.PK_WORDS() : words)[wordIndex];
+
+            if (isDeleting) {
+                typedElement.innerText = currentWord.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typedElement.innerText = currentWord.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            if (!isDeleting && charIndex === currentWord.length) {
+                isDeleting = true;
+                setTimeout(typeEffect, 2000);
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                wordIndex = (wordIndex + 1) % words.length;
+                setTimeout(typeEffect, 500);
+            } else {
+                setTimeout(typeEffect, isDeleting ? 50 : 100);
+            }
+        }
+
+        typeEffect();
+
+        // Peralatan Komlek category filter (event delegation)
+        const filterContainer = document.getElementById('alutsista-filters');
+        const alutsistaCards = document.querySelectorAll('.alutsista-card');
+        const emptyMessage = document.getElementById('alutsista-empty');
+
+        if (filterContainer) {
+            filterContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.filter-btn');
+                if (!btn || !filterContainer.contains(btn)) return;
+
+                const filter = btn.getAttribute('data-filter');
+
+                filterContainer.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-gold-500', 'text-army-950');
+                    b.classList.add('bg-army-900', 'text-gray-300', 'border', 'border-army-700');
+                });
+                btn.classList.add('active', 'bg-gold-500', 'text-army-950');
+                btn.classList.remove('bg-army-900', 'text-gray-300', 'border', 'border-army-700');
+
+                let visibleCount = 0;
+                alutsistaCards.forEach(card => {
+                    const matches = filter === 'all' || card.getAttribute('data-category') === filter;
+                    card.classList.toggle('hidden-card', !matches);
+                    if (matches) visibleCount++;
+                });
+
+                if (emptyMessage) emptyMessage.classList.toggle('hidden', visibleCount > 0);
+            });
+        }
+
+        // Modal Handler
+        const alutsistaModal = document.getElementById('alutsista-modal');
+        const categoryIcons = {
+            radio: 'fa-walkie-talkie',
+            satelit: 'fa-satellite-dish',
+            sandi: 'fa-lock'
+        };
+
+        function openAlutsistaModal(title, subtitle, category, speed, range, weapons, features) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-subtitle').innerText = subtitle;
+            document.getElementById('modal-speed').innerText = speed;
+            document.getElementById('modal-range').innerText = range;
+            document.getElementById('modal-weapons').innerText = weapons;
+            document.getElementById('modal-features').innerText = features;
+
+            const modalIcon = document.getElementById('modal-icon');
+            modalIcon.className = 'fa-solid ' + (categoryIcons[category] || 'fa-tower-broadcast') + ' text-gold-500/80 text-7xl';
+
+            alutsistaModal.classList.remove('hidden');
+            alutsistaModal.classList.add('flex');
+            document.body.style.overflow = 'hidden'; // lock scroll while modal open
+        }
+
+        function closeAlutsistaModal() {
+            alutsistaModal.classList.add('hidden');
+            alutsistaModal.classList.remove('flex');
+            document.body.style.overflow = ''; // restore scroll
+        }
+
+        // Close modal on backdrop click
+        alutsistaModal.addEventListener('click', (e) => {
+            if (e.target === alutsistaModal) closeAlutsistaModal();
+        });
+
+        // Contact Form Mock
+        document.getElementById('contact-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const feedback = document.getElementById('form-feedback');
+            feedback.classList.remove('hidden');
+            this.reset();
+            setTimeout(() => feedback.classList.add('hidden'), 5000);
+        });
+
+        // Stat Counter
+        let animated = false;
+        const counters = document.querySelectorAll('.counter');
+
+        function startCounters() {
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                let count = 0;
+                const increment = target / 100;
+                const updateCount = () => {
+                    count += increment;
+                    if (count < target) {
+                        counter.innerText = Math.ceil(count).toLocaleString('id-ID');
+                        requestAnimationFrame(() => setTimeout(updateCount, 20));
+                    } else {
+                        counter.innerText = target.toLocaleString('id-ID') + "+";
+                    }
+                };
+                updateCount();
+            });
+        }
+
+        const personelSection = document.getElementById('personel');
+        window.addEventListener('scroll', () => {
+            if (!personelSection || animated) return;
+            const sectionPos = personelSection.getBoundingClientRect().top;
+            if (sectionPos < window.innerHeight / 1.3) {
+                startCounters();
+                animated = true;
+            }
+        });
+    </script>
+</body>
+</html>
